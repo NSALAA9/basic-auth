@@ -1,29 +1,33 @@
-const Users = require('../models/users-model');
+const bcrypt = require('bcrypt');
+const base64 = require('base-64');
+const { Users } = require('../models/index');
 
 async function basicAuth(req, res, next) {
-  const authorizationHeader = req.headers.authorization;
-
-  if (!authorizationHeader) {
-    res.status(401).json({ message: 'Authorization header is missing' });
-    return;
+  if (!req.headers.authorization) {
+    return res.status(401).send('Unauthorized');
   }
 
-  const encodedCredentials = authorizationHeader.split(' ')[1];
-  const decodedCredentials = Buffer.from(encodedCredentials, 'base64').toString();
-  const [username, password] = decodedCredentials.split(':');
+  const encodedCredentials = req.headers.authorization.split(' ')[1];
+  const credentials = base64.decode(encodedCredentials);
+  const [username, password] = credentials.split(':');
 
   try {
-    const user = await Users.findOne({ where: { username } });
+    const user = await Users.findOne({ where: { username: username } });
 
-    if (!user || !(await user.authenticate(password))) {
-      res.status(401).json({ message: 'Invalid Login' });
-      return;
+    if (!user) {
+      return res.status(401).send('Unauthorized');
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).send('Unauthorized');
     }
 
     req.user = user;
     next();
   } catch (error) {
-    next(error);
+    return res.status(500).send('Internal Server Error');
   }
 }
 

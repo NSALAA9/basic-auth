@@ -1,5 +1,10 @@
-const request = require('supertest');
-const app = require('../src/server');
+const { app } = require("../src/server");
+const { DB } = require("../src/auth/models/index");
+const supertest = require('supertest');
+const mockServer = supertest(app);
+const base64 = require('base-64')
+const basicAuthMiddleWare = require('../src/auth/middleware/basic')
+
 
 describe('Authentication API', () => {
   it('should create a new user on signup', async () => {

@@ -2,6 +2,7 @@ const express = require('express');
 const basicAuthMiddleware = require('./middleware/basic');
 const bcrypt = require('bcrypt');
 const router = express.Router();
+const User  = require('./models/users-model')
 
 router.post('/signup', userSignUp);
 router.post('/signin', basicAuthMiddleware, userSignIn);

@@ -1,6 +1,43 @@
-const bcrypt = require('bcrypt');
+
+
+// const bcrypt = require('bcrypt');
+// const base64 = require('base-64');
+// const { Users } = require('../models/index');
+
+
+// async function basicAuth(req, res, next) {
+//   if (!req.headers.authorization) {
+//     return res.status(401).send('Unauthorized');
+//   }
+
+//   const encodedCredentials = req.headers.authorization.split(' ')[1];
+//   const credentials = base64.decode(encodedCredentials);
+//   const [username, password] = credentials.split(':');
+
+//   try {
+//     const user = await Users.findOne({ where: { username: username } });
+
+//     if (!user) {
+//       return res.status(401).send('Unauthorized');
+//     }
+
+//     const passwordMatch = await bcrypt.compare(password, user.password);
+
+//     if (!passwordMatch) {
+//       return res.status(401).send('Unauthorized');
+//     }
+
+//     req.user = user;
+//     next();
+//   } catch (err) {
+//     return res.status(500).send('Internal Server Error');
+//   }
+// }
+
+// module.exports = basicAuth;
 const base64 = require('base-64');
-const { Users } = require('../models/index');
+const bcrypt = require('bcrypt');
+const { User } = require('../models/index');
 
 async function basicAuth(req, res, next) {
   if (!req.headers.authorization) {
@@ -12,7 +49,7 @@ async function basicAuth(req, res, next) {
   const [username, password] = credentials.split(':');
 
   try {
-    const user = await Users.findOne({ where: { username: username } });
+    const user = await User.findOne({ where: { username: username } });
 
     if (!user) {
       return res.status(401).send('Unauthorized');
@@ -26,8 +63,8 @@ async function basicAuth(req, res, next) {
 
     req.user = user;
     next();
-  } catch (error) {
-    return res.status(500).send('Internal Server Error');
+  } catch (err) {
+    return next(err); // Forward the error to the next error-handling middleware
   }
 }
 

@@ -12,4 +12,5 @@ const userTable = require('./users-model')
 module.exports = {
     DB: sequelize,
     User: userTable(sequelize, DataTypes)
+    
 }

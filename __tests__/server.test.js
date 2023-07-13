@@ -210,7 +210,7 @@ describe('Test the signin & signup endpoints', () => {
 
   it(' POST to /signup to create a new user.  ', async () => {
     const result = await mockServer.post('/signup').send({
-      userName: 'rama',
+      userName: 'Alaa',
       password: '1234'
     });
     expect(result.status).toEqual(201);

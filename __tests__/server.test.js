@@ -219,7 +219,7 @@ describe('Test the signin & signup endpoints', () => {
   it('POST to /signin to login as a user (use basic auth).  ', async () => {
     const req = {
       headers: {
-        authorization: `Basic ${base64.encode('rama:1234')}`
+        authorization: `Basic ${base64.encode('Alaa:1234')}`
       },
       body: {
         userName: undefined

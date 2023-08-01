@@ -6,11 +6,12 @@ const dataBase_URL = process.env.NODE_ENV === 'test' ? 'sqlite:memory:' : proces
 
 let sequelize = new Sequelize(dataBase_URL, {})
 
-const userTable = require('./users-model')
+const user = require('./user')
+const userTable = user(sequelize,DataTypes)
 
 
 module.exports = {
     DB: sequelize,
-    User: userTable(sequelize, DataTypes)
+    userTable: userTable
     
 }

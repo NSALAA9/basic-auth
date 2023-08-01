@@ -1,9 +1,7 @@
 
-
-// const bcrypt = require('bcrypt');
 // const base64 = require('base-64');
-// const { Users } = require('../models/index');
-
+// const bcrypt = require('bcrypt');
+// const { User } = require('../models/index');
 
 // async function basicAuth(req, res, next) {
 //   if (!req.headers.authorization) {
@@ -12,10 +10,10 @@
 
 //   const encodedCredentials = req.headers.authorization.split(' ')[1];
 //   const credentials = base64.decode(encodedCredentials);
-//   const [username, password] = credentials.split(':');
+//   const [N, password] = credentials.split(':');
 
 //   try {
-//     const user = await Users.findOne({ where: { username: username } });
+//     const user = await User.findOne({ where: { username: username } });
 
 //     if (!user) {
 //       return res.status(401).send('Unauthorized');
@@ -30,42 +28,78 @@
 //     req.user = user;
 //     next();
 //   } catch (err) {
-//     return res.status(500).send('Internal Server Error');
+//     return next(err); // Forward the error to the next error-handling middleware
 //   }
 // }
 
 // module.exports = basicAuth;
-const base64 = require('base-64');
+
+
+// 'use strict';
+// const bcrypt = require('bcrypt');
+// const base64 = require('base-64');
+// const { userTable } = require('../models');
+//     async function basicAuthMiddleWare(req, res, next){
+//     if(req.headers.authorization){
+//       const basicHeaderParts = req.headers.authorization.split(' ');
+//       const encodedValues= basicHeaderParts.pop();
+//       const decodedValues = base64.decode(encodedValues);
+//       const [userName, password] = decodedValues.split(':');
+//       const user = await userTable.findOne({ where: { userName } });
+//       const isValid = await bcrypt.compare(password, user.password);
+//       if (isValid) {
+//         req.user = user;
+//         next();
+//       }
+//       else {
+//         res.status(401).send('Invalid password');
+//         throw new Error('this user is invalid');
+//       }
+//   }}
+//   module.exports = basicAuthMiddleWare;
+
+'use strict';
 const bcrypt = require('bcrypt');
-const { User } = require('../models/index');
+const base64 = require('base-64');
+const { userTable } = require('../models');
 
-async function basicAuth(req, res, next) {
-  if (!req.headers.authorization) {
-    return res.status(401).send('Unauthorized');
-  }
-
-  const encodedCredentials = req.headers.authorization.split(' ')[1];
-  const credentials = base64.decode(encodedCredentials);
-  const [username, password] = credentials.split(':');
-
-  try {
-    const user = await User.findOne({ where: { username: username } });
-
-    if (!user) {
-      return res.status(401).send('Unauthorized');
+async function basicAuthMiddleWare(req, res, next) {
+  if (req.headers.authorization) {
+    const basicHeaderParts = req.headers.authorization.split(' ');
+    if (basicHeaderParts.length !== 2 || basicHeaderParts[0] !== 'Basic') {
+      res.status(401).send('Invalid authorization header');
+      return;
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const encodedValues = basicHeaderParts[1];
+    const decodedValues = base64.decode(encodedValues);
+    const [userName, password] = decodedValues.split(':');
 
-    if (!passwordMatch) {
-      return res.status(401).send('Unauthorized');
+    try {
+      const user = await userTable.findOne({ where: { userName } });
+
+      if (!user) {
+        res.status(401).send('User not found');
+        return;
+      }
+
+      const isValidPassword = await bcrypt.compare(password, user.password);
+
+      if (!isValidPassword) {
+        res.status(401).send('Invalid password');
+        return;
+      }
+
+      // If the user and password are valid, attach the user to the request for later use
+      req.user = user;
+      next();
+    } catch (error) {
+      console.error('Error while authenticating user:', error);
+      res.status(500).send('Internal server error');
     }
-
-    req.user = user;
-    next();
-  } catch (err) {
-    return next(err); // Forward the error to the next error-handling middleware
+  } else {
+    res.status(401).send('Authorization header not provided');
   }
 }
 
-module.exports = basicAuth;
+module.exports = basicAuthMiddleWare;
